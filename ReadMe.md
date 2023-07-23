@@ -1,6 +1,6 @@
 これはJWT認証をFastAPIのみで行うサンプルコードです。  
 起動前にmigrate_db.pyを実行し、データベースの生成及びマイグレーションをして下さい。  
-SQLite3でのデータベースが作成されます。 
+SQLite3でのデータベースが作成されます。  
 コマンド: py -m migrate_db
 ローカルで起動する場合はuvicornで起動して下さい。  
 コマンド: py -m uvicorn main:app --reload  
