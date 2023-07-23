@@ -5,4 +5,4 @@ SQLite3でのデータベースが作成されます。
 ローカルで起動する場合はuvicornで起動して下さい。  
 コマンド: py -m uvicorn main:app --reload  
 認証に必要なデータ登録はSwaggerUI上で実行して下さい。  
-※URL末尾に/docsを付けて移動し、'/auth/create/user'からis_adminをtrueにして管理者を作成して下さい。  
+※URL末尾に/docsを付けて移動し、'/auth/create/user'からis_adminをtrueにして管理者を作成します。  
