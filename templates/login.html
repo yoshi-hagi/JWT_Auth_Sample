@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <form id="loginForm">
+        <label for="username">ユーザー名:</label><br>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">パスワード:</label><br>
+        <input type="password" id="password" name="password"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p style="line-height: 1; word-wrap: break-word;">このサンプルではJavaScriptでログイン後のリダイレクトエンドポイントからのレスポンスを取得し、その内容をページの特定の部分に挿入します。</p>
+    <p style="line-height: 1; word-wrap: break-word;">※管理者・ユーザーの登録は/docsからSwaggerUIを利用し、'/auth/create/user'のエンドポイントを利用してください</p>
+    <p style="line-height: 1; word-wrap: break-word;">認証が正しい場合↓に認証状態と管理者・ユーザー名が表示されます</p>
+    <a href="/">戻る</a>
+    <div id="dashboardContent">
+    <!-- Here the dashboard content will be appended -->
+    </div>
+
+    <script>
+    $("#loginForm").submit(function(event) {
+        event.preventDefault(); // formのデフォルトのsubmitアクションを防ぐ
+
+        var form = $(this);
+        var url = '/token' // token取得エンドポイント
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), // formデータをエンコード
+            success: function(data)
+            {
+                localStorage.setItem("token", data.access_token); // localStorageにトークンを保存
+                // ダッシュボードページにリダイレクト
+                $.ajax({
+                    type: "GET",
+                    url: "/dashboard",
+                    beforeSend: function(xhr) { 
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + data.access_token);
+                    },
+                    success: function(data) {
+                        // Add the content of the dashboard to the div with id "dashboardContent"
+                        $('#dashboardContent').html(data);
+                    }
+                });
+            }
+        });
+    });
+    </script>
+
+</body>
+</html>
+
+

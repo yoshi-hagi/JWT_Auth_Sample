@@ -1,0 +1,191 @@
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>JWT認証サンプル</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css">
+        <style>
+            .code-block {
+                background-color: #1e1e1e;
+                color: #f8f8f2;
+                padding: 20px;
+                border-radius: 5px;
+                max-width: 800px;
+                overflow-x: auto;
+                font-family: "Courier New", monospace;
+                font-size: 14px;
+            }
+            .copy-button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 14px;
+                margin-top: 10px;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>JWT認証サンプル</h1>
+        <a href="/login">ブラウザ上での動作を確認する</a>
+<h3>WebAPIとして使うためのサンプルコード</h3>
+<p style="line-height: 1; word-wrap: break-word;">リクエスト送信でJWT認証を行ったうえでユーザーデータを取得するサンプルコードです。</p>
+<p style="line-height: 1; word-wrap: break-word;">管理者・ユーザーの登録は/docsからSwaggerUIを利用し、'/auth/create/user'のエンドポイントを利用してください</p>
+<div style="line-height: 0.1;">
+    <h4 style="display: inline-block;">JSON形式でデータを取得し、csvファイルへ出力(Python)</h4>
+        <button class="copy-button" onclick="copyToClipboard('python-code')" style="line-height: 1; display: inline-block;">クリップボードへコピー</button>
+</div>
+<pre><code class="python code-block" id="python-code">
+import requests
+import csv
+import os
+import json
+
+# JWTトークンを取得するためのエンドポイント。ローカルホストでの起動を想定しています
+token_url = "http://localhost:8000/token"
+# ユーザーデータを取得するためのエンドポイント。ローカルホストでの起動を想定しています
+user_data_url = "http://localhost:8000/userdata"
+
+# ユーザー名とパスワードを設定
+username = "username"
+password = "password"
+
+# 認証リクエストを送信
+response = requests.post(token_url, data={"username": username, "password": password})
+
+# レスポンスからトークンを取得
+token_data = response.json()
+token = token_data["access_token"]
+
+# ヘッダーにトークンを設定
+headers = {
+    "Authorization": f"Bearer {token}"
+}
+
+# ユーザーデータを取得
+response = requests.get(user_data_url, headers=headers)
+
+# レスポンスデータをJSON形式に変換
+data = response.json()
+
+# 保存したいディレクトリを指定します
+save_dir = r'/yourdirectory'
+
+# CSVとして保存するファイル名を指定します
+filename = "userdata.csv"
+
+# ファイルのフルパスを生成します
+file_path = os.path.join(save_dir, filename)
+    
+# CSVとして保存します
+with open(file_path, 'w', newline='') as f:
+    writer = csv.writer(f)
+
+    # ヘッダーを書き込む
+    writer.writerow(["username", "password", "is_admin"])
+
+    # レスポンスデータを1行ずつCSVファイルに書き込む
+    for item in data:
+        writer.writerow([item["username"], item["password"], item["is_admin"]])
+</code></pre>
+<div style="line-height: 0.1;">
+    <h4 style="display: inline-block;">JSON形式でデータを取得後、ワークシートの転記(Excel VBA)</h4>
+            <button class="copy-button" onclick="copyToClipboard('excelvba-code')" style="line-height: 1; display: inline-block;">クリップボードへコピー</button>
+    </div>
+<pre><code class="excelvba code-block" id="excelvba-code">Sub AuthandRequests4JWT()
+
+    Dim httpObj As Object
+    Set httpObj = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    ' ユーザー名とパスワードを設定
+    Dim username As String
+    Dim password As String
+    username = "username"
+    password = "password"
+
+    ' 認証リクエスト。ローカルホストでの起動を想定しています。
+    httpObj.Open "POST", "http://localhost:8000/token", False
+    httpObj.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
+    httpObj.send "username=" & username & "&password=" & password
+
+    ' レスポンスからトークンを取り出す
+    Dim response As String
+    Dim startPos As Integer
+    Dim endPos As Integer
+    Dim token As String
+    response = httpObj.responseText
+    startPos = InStr(response, "access_token"":""") + Len("access_token"":""")
+    endPos = InStr(startPos, response, """") ' find next " after startPos
+    token = Mid(response, startPos, endPos - startPos)
+
+    ' JWT認証で保護されたエンドポイントにリクエストを送信
+    httpObj.Open "GET", "http://localhost:8000/userdata", False
+    httpObj.setRequestHeader "Authorization", "Bearer " & token
+    httpObj.send
+
+    ' レスポンスをJSONとしてパース
+    Dim json As Object
+    Set json = JsonConverter.ParseJson(httpObj.responseText)
+
+    ' レスポンスをワークシートに書き込む
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")  ' ワークシート名を適宜変更してください
+    Dim row As Integer
+    Dim col As Integer
+    Dim key As Variant
+    Dim item As Variant
+    
+    ' シートのクリア
+    ws.Cells.ClearContents
+    ' 取得したトークンの表示
+    ws.Cells(1, 1).Value = "取得したJWT"
+    ws.Cells(1, 2).Value = token
+    
+    ' データの転記
+    row = 3  ' 3行目から開始
+
+    ' 列ヘッダを書き込む
+    col = 1
+    For Each key In json(1).Keys  ' 最初のアイテムのキーを使用して列ヘッダを作成
+        ws.Cells(row, col).Value = key
+        col = col + 1
+    Next key
+
+    ' データを書き込む
+    For Each item In json
+        row = row + 1
+        col = 1
+        For Each key In item.Keys
+            ws.Cells(row, col).Value = item(key)
+            col = col + 1
+        Next key
+    Next item
+    
+End Sub
+</code></pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+    });
+
+    function copyToClipboard(codeBlockId) {
+        const codeBlock = document.getElementById(codeBlockId);
+        const range = document.createRange();
+        range.selectNode(codeBlock);
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        alert('クリップボードへコピーしました');
+    }
+</script>
+
+    </body>
+</html>
