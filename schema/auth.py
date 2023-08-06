@@ -19,7 +19,7 @@ class UserCreate(User):
 class UserCreateResponse(UserCreate):
     id: int = Field(None, description='ユーザーの登録ID。自動採番')
     class Config:
-        orm_mode = True
+        orm_mode = True # PydanticがV2の場合はfrom_attributes = True
 
 # ユーザー自身がユーザー名とパスワードを更新するためのスキーマ
 class UserUpdate(BaseModel):
